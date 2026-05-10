@@ -83,6 +83,23 @@ Every domain entity belongs to a **Company** (the tenant). The `companyId` must 
 ### Shared package (`packages/shared`)
 Contains shared TypeScript types (`types.ts`), shared utilities (`utils.ts`), and an index barrel (`index.ts`). Consumed as `@vivi-gourmet/shared` by both apps. It must be built (`tsc`) before `api` or `web` start — handled automatically by the Turborepo pipeline and `predev` scripts.
 
+## Git Workflow (OBRIGATÓRIO)
+
+Regras completas em `.claude/rules/git-workflow.md`. Resumo:
+
+**Antes de modificar qualquer arquivo:**
+1. `git branch --show-current` — confirmar branch atual
+2. `git status` — verificar se está limpo
+3. `git pull` — atualizar ANTES de criar branch nova
+4. `git checkout -b <tipo>/<nome>` — criar branch de trabalho
+5. Confirmar com o usuário em qual branch as alterações serão feitas
+
+**Tipos:** `feature/` · `fix/` · `refactor/` · `chore/`
+
+**Proibido:** modificar `main`/`master`/`develop` diretamente · fazer `git push` sem permissão explícita do usuário.
+
+**Ao concluir:** informar branch criada + resumo das alterações + sugestão de commit em Conventional Commits (`tipo(escopo): descrição`).
+
 ## Key Prisma Schema Facts
 
 - `RecipeItem` must reference **either** `ingredientId` or `subRecipeId` — never both and never neither (validated in application code, not DB).
