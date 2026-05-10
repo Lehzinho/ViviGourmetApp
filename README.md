@@ -183,3 +183,4 @@ Arquivos de orquestração na raiz: `turbo.json`, `tsconfig.base.json`, `docker-
 - **`P1000` (autenticação Prisma):** confira se o `DATABASE_URL` usa a porta **5433** e se `docker compose up -d` está rodando; confira se não há outro Postgres “na frente” na mesma porta configurada na URL.  
 - **Painel mostra API offline:** confirme que a API está em `3001` e que o front usa `NEXT_PUBLIC_API_URL` correto (ou o padrão).  
 - **Primeiro `npm run dev` demora:** os pacotes `web` e `api` rodam `predev` que compila o `shared` uma vez.
+# ViviGourmetApp
