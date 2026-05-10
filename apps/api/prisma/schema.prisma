@@ -1,0 +1,314 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Enums ---
+
+enum CompanyUserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum IngredientUnit {
+  GRAM
+  ML
+  UNIT
+}
+
+enum ExpenseType {
+  FIXED
+  VARIABLE
+}
+
+enum ExpensePeriod {
+  MONTHLY
+  WEEKLY
+}
+
+enum IngredientType {
+  RAW
+  SEMI_FINISHED
+}
+
+enum RecipeType {
+  COMPOSITION
+  PRODUCT
+}
+
+// --- Core auth & tenant ---
+
+/// Usuário global (pode pertencer a várias empresas via CompanyUser).
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  companyUsers  CompanyUser[]
+  refreshTokens RefreshToken[]
+
+  @@index([deletedAt])
+  @@index([createdAt])
+}
+
+/// Empresa (tenant). Não possui companyId — é o próprio tenant.
+model Company {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  plan      String    @default("FREE")
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  users          CompanyUser[]
+  ingredients    Ingredient[]
+  ingredientPrices IngredientPrice[]
+  recipes        Recipe[]
+  recipeItems    RecipeItem[]
+  products       Product[]
+  productExtraCosts ProductExtraCost[]
+  categories     Category[]
+  expenses       Expense[]
+  menus          Menu[]
+  menuItems      MenuItem[]
+  refreshTokens  RefreshToken[]
+
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([plan])
+}
+
+/// Refresh tokens opacos (hash armazenado). Revogável no logout.
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  companyId String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([userId, companyId])
+  @@index([expiresAt])
+}
+
+model CompanyUser {
+  userId    String
+  companyId String
+  role      CompanyUserRole
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, companyId])
+  @@index([companyId])
+  @@index([companyId, role])
+  @@index([userId])
+}
+
+// --- Ingredientes & histórico de preço (somente append) ---
+
+model Ingredient {
+  id                  String         @id @default(cuid())
+  companyId           String
+  name                String
+  unit                IngredientUnit
+  type                IngredientType @default(RAW)
+  compositionRecipeId String?        @unique
+  createdAt           DateTime       @default(now())
+  deletedAt           DateTime?
+
+  company             Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  prices              IngredientPrice[]
+  recipeItems         RecipeItem[]
+  compositionRecipe   Recipe?          @relation("IngredientComposition", fields: [compositionRecipeId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([companyId, deletedAt])
+  @@index([companyId, name])
+  @@index([companyId, type])
+}
+
+/// Histórico imutável de preços: nunca atualizar linhas; sempre inserir nova entrada.
+model IngredientPrice {
+  id            String   @id @default(cuid())
+  companyId     String
+  ingredientId  String
+  price         Decimal  @db.Decimal(14, 4)
+  quantity      Decimal  @db.Decimal(14, 4)
+  pricePerUnit  Decimal  @db.Decimal(14, 6)
+  createdAt     DateTime @default(now())
+
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([companyId, ingredientId])
+  @@index([ingredientId, createdAt(sort: Desc)])
+  @@index([createdAt])
+}
+
+// --- Receitas & composição recursiva ---
+
+model Recipe {
+  id          String         @id @default(cuid())
+  companyId   String
+  name        String
+  type        RecipeType     @default(PRODUCT)
+  yield       Decimal        @db.Decimal(14, 4)
+  yieldUnit   IngredientUnit
+  createdAt   DateTime       @default(now())
+  deletedAt   DateTime?
+
+  company           Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items             RecipeItem[] @relation("RecipeComposition")
+  definedIngredient Ingredient?  @relation("IngredientComposition")
+  products          Product[]
+
+  @@index([companyId])
+  @@index([companyId, deletedAt])
+  @@index([companyId, name])
+  @@index([companyId, type])
+}
+
+model RecipeItem {
+  id           String         @id @default(cuid())
+  companyId    String
+  recipeId     String
+  ingredientId String
+  quantity     Decimal        @db.Decimal(14, 4)
+  unit         IngredientUnit
+
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recipe     Recipe     @relation("RecipeComposition", fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([companyId])
+  @@index([companyId, recipeId])
+  @@index([recipeId])
+  @@index([ingredientId])
+}
+
+// --- Catálogo ---
+
+model Category {
+  id        String @id @default(cuid())
+  companyId String
+  name      String
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@index([companyId])
+  @@index([companyId, name])
+}
+
+model Product {
+  id           String         @id @default(cuid())
+  companyId    String
+  name         String
+  description  String?
+  photoUrl     String?
+  weight       Decimal?       @db.Decimal(10, 4)
+  dimensions   String?
+  recipeId     String
+  categoryId   String?
+  sellingPrice Decimal        @db.Decimal(14, 4)
+  createdAt    DateTime       @default(now())
+  deletedAt    DateTime?
+
+  company    Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recipe     Recipe             @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  category   Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  extraCosts ProductExtraCost[]
+  menuItems  MenuItem[]
+
+  @@index([companyId])
+  @@index([companyId, deletedAt])
+  @@index([companyId, categoryId])
+  @@index([recipeId])
+  @@index([companyId, name])
+}
+
+model ProductExtraCost {
+  id        String  @id @default(cuid())
+  companyId String
+  productId String
+  name      String
+  unitCost  Decimal @db.Decimal(14, 4)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([productId])
+}
+
+// --- Despesas ---
+
+model Expense {
+  id        String        @id @default(cuid())
+  companyId String
+  name      String
+  type      ExpenseType
+  amount    Decimal       @db.Decimal(14, 4)
+  period    ExpensePeriod
+  createdAt DateTime      @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([companyId, type])
+  @@index([companyId, period])
+  @@index([companyId, createdAt])
+}
+
+// --- Cardápio público ---
+
+model Menu {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  slug      String
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  company Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items   MenuItem[]
+
+  @@unique([companyId, slug])
+  @@index([companyId])
+  @@index([companyId, isPublic])
+  @@index([companyId, slug])
+}
+
+model MenuItem {
+  id         String  @id @default(cuid())
+  companyId  String
+  menuId     String
+  productId  String
+  isVisible Boolean @default(true)
+  /// Ordem de exibição no cardápio (menor primeiro).
+  order     Int     @default(0) @map("sort_order")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  menu    Menu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([menuId, productId])
+  @@index([companyId])
+  @@index([companyId, menuId])
+  @@index([menuId, order])
+  @@index([productId])
+}
