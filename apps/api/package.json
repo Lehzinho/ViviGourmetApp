@@ -6,7 +6,7 @@
     "predev": "npm run build -w @vivi-gourmet/shared",
     "build": "prisma generate && nest build",
     "dev": "nest start --watch",
-    "start": "node dist/main",
+    "start": "prisma migrate deploy && node dist/main",
     "lint": "prisma generate && tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
