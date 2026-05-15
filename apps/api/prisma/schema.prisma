@@ -22,15 +22,6 @@ enum IngredientUnit {
   UNIT
 }
 
-enum ExpenseType {
-  FIXED
-  VARIABLE
-}
-
-enum ExpensePeriod {
-  MONTHLY
-  WEEKLY
-}
 
 enum IngredientType {
   RAW
@@ -259,20 +250,25 @@ model ProductExtraCost {
 // --- Despesas ---
 
 model Expense {
-  id        String        @id @default(cuid())
-  companyId String
-  name      String
-  type      ExpenseType
-  amount    Decimal       @db.Decimal(14, 4)
-  period    ExpensePeriod
-  createdAt DateTime      @default(now())
+  id         String    @id @default(cuid())
+  companyId  String
+  name       String
+  amount     Decimal   @db.Decimal(10, 2)
+  category   String
+  recurrence String
+  date       DateTime
+  notes      String?
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([companyId])
-  @@index([companyId, type])
-  @@index([companyId, period])
-  @@index([companyId, createdAt])
+  @@index([companyId, deletedAt])
+  @@index([companyId, date])
+  @@index([companyId, category])
+  @@map("expenses")
 }
 
 // --- Cardápio público ---
