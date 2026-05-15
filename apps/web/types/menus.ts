@@ -44,3 +44,7 @@ export interface UpdateMenuItemPayload {
   isVisible?: boolean;
   order?: number;
 }
+
+export interface ReorderItemsPayload {
+  items: { id: string; order: number }[];
+}

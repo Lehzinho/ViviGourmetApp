@@ -6,6 +6,7 @@ import type {
   MenuDetailRow,
   MenuItemRow,
   MenuRow,
+  ReorderItemsPayload,
   UpdateMenuItemPayload,
   UpdateMenuPayload,
 } from "@/types/menus";
@@ -106,6 +107,20 @@ export function useRemoveMenuItem() {
   return useMutation({
     mutationFn: async ({ menuId, itemId }: { menuId: string; itemId: string }) => {
       await apiClient.delete(`/menus/${menuId}/items/${itemId}`);
+    },
+    onSuccess: (_data, { menuId }) => qc.invalidateQueries({ queryKey: [KEY, menuId] }),
+  });
+}
+
+export function useReorderMenuItems() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ menuId, payload }: { menuId: string; payload: ReorderItemsPayload }) => {
+      const { data } = await apiClient.patch<MenuDetailRow>(
+        `/menus/${menuId}/items/reorder`,
+        payload,
+      );
+      return data;
     },
     onSuccess: (_data, { menuId }) => qc.invalidateQueries({ queryKey: [KEY, menuId] }),
   });

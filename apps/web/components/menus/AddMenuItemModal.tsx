@@ -68,10 +68,28 @@ const Body = styled.div`
   gap: 1rem;
 `;
 
-const PriceHint = styled.p`
-  margin: 0;
+const CostCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.75rem;
+  border-radius: ${({ theme }) => theme.radius.md};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+const CostRow = styled.div`
+  display: flex;
+  justify-content: space-between;
   font-size: 0.8125rem;
-  color: ${({ theme }) => theme.colors.text.muted};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const CostLabel = styled.span``;
+
+const CostValue = styled.span`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
 
 const CheckRow = styled.label`
@@ -183,6 +201,13 @@ export function AddMenuItemModal({
   const selectedProduct = allProducts.find((p) => p.id === productId);
   const isValid = productId !== "";
 
+  const cost = selectedProduct?.totalCostPerUnit ?? null;
+  const salePrice = selectedProduct?.sellingPrice ?? null;
+  const margin =
+    cost !== null && salePrice !== null && salePrice > 0
+      ? ((salePrice - cost) / salePrice) * 100
+      : null;
+
   const handleSubmit = () => {
     if (!isValid) return;
     onSubmit({ productId, isVisible });
@@ -224,7 +249,26 @@ export function AddMenuItemModal({
               </Field>
 
               {selectedProduct && (
-                <PriceHint>Preço de venda: {formatBRL(selectedProduct.sellingPrice)}</PriceHint>
+                <CostCard>
+                  <CostRow>
+                    <CostLabel>Preço de venda</CostLabel>
+                    <CostValue>{formatBRL(selectedProduct.sellingPrice)}</CostValue>
+                  </CostRow>
+                  {cost !== null && (
+                    <CostRow>
+                      <CostLabel>Custo unitário</CostLabel>
+                      <CostValue>{formatBRL(cost)}</CostValue>
+                    </CostRow>
+                  )}
+                  {margin !== null && (
+                    <CostRow>
+                      <CostLabel>Margem</CostLabel>
+                      <CostValue style={{ color: margin >= 0 ? "#16a34a" : "#dc2626" }}>
+                        {margin.toFixed(1)}%
+                      </CostValue>
+                    </CostRow>
+                  )}
+                </CostCard>
               )}
 
               <CheckRow>
