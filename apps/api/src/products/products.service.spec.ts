@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { Decimal } from "@prisma/client/runtime/library";
 import { PrismaService } from "../prisma/prisma.service";
+import { CostCalculatorService } from "../cost-calculator/cost-calculator.service";
 import { ProductsService } from "./products.service";
 
 const mockPrisma = () => ({
@@ -29,6 +30,10 @@ const mockPrisma = () => ({
   $transaction: jest.fn(),
 });
 
+const mockCostCalculator = () => ({
+  calculateProductCost: jest.fn().mockRejectedValue(new Error("no prices")),
+});
+
 describe("ProductsService", () => {
   let service: ProductsService;
   let prisma: ReturnType<typeof mockPrisma>;
@@ -39,6 +44,7 @@ describe("ProductsService", () => {
       providers: [
         ProductsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: CostCalculatorService, useValue: mockCostCalculator() },
       ],
     }).compile();
     service = module.get(ProductsService);
