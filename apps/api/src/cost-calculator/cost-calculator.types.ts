@@ -25,3 +25,11 @@ export type ProductCostResult = {
   breakdown: CostBreakdownItem[];
   extraCosts: ExtraCostItem[];
 };
+
+export type RecipeCostResult = {
+  totalCost: number;
+  costPerUnit: number;
+  yield: number;
+  yieldUnit: string;
+  breakdown: CostBreakdownItem[];
+};
