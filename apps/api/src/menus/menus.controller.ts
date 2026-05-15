@@ -17,6 +17,7 @@ import { CreateMenuDto } from "./dto/create-menu.dto";
 import { UpdateMenuDto } from "./dto/update-menu.dto";
 import { AddMenuItemDto } from "./dto/add-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
+import { ReorderItemsDto } from "./dto/reorder-items.dto";
 
 @Controller("menus")
 @UseGuards(JwtAuthGuard)
@@ -89,5 +90,14 @@ export class MenusController {
     @Param("itemId") itemId: string,
   ) {
     return this.menusService.removeItem(menuId, itemId, companyId);
+  }
+
+  @Patch(":id/items/reorder")
+  reorderItems(
+    @CurrentUser("companyId") companyId: string,
+    @Param("id") menuId: string,
+    @Body() dto: ReorderItemsDto,
+  ) {
+    return this.menusService.reorderItems(menuId, dto, companyId);
   }
 }

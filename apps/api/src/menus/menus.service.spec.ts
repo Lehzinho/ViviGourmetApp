@@ -22,6 +22,7 @@ const mockPrisma = () => ({
   product: {
     findFirst: jest.fn(),
   },
+  $transaction: jest.fn(),
 });
 
 const COMPANY = "company-1";
@@ -255,6 +256,28 @@ describe("MenusService", () => {
       await expect(service.removeItem(MENU_ID, "bad-item", COMPANY)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe("reorderItems", () => {
+    it("should throw NotFoundException when menu not found", async () => {
+      prisma.menu.findFirst.mockResolvedValue(null);
+      await expect(
+        service.reorderItems(MENU_ID, { items: [{ id: ITEM_ID, order: 0 }] }, COMPANY),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("should call $transaction with an update for each item", async () => {
+      prisma.menu.findFirst
+        .mockResolvedValueOnce(baseMenu)
+        .mockResolvedValueOnce({ ...baseMenu, items: [] });
+      prisma.$transaction.mockResolvedValue([{}]);
+      await service.reorderItems(
+        MENU_ID,
+        { items: [{ id: "i1", order: 0 }, { id: "i2", order: 1 }] },
+        COMPANY,
+      );
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
   });
 });

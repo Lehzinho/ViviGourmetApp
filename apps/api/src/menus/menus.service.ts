@@ -9,6 +9,7 @@ import type { CreateMenuDto } from "./dto/create-menu.dto";
 import type { UpdateMenuDto } from "./dto/update-menu.dto";
 import type { AddMenuItemDto } from "./dto/add-menu-item.dto";
 import type { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
+import type { ReorderItemsDto } from "./dto/reorder-items.dto";
 
 export type MenuRow = {
   id: string;
@@ -230,6 +231,19 @@ export class MenusService {
     });
     if (!item) throw new NotFoundException(`Menu item not found: ${itemId}`);
     await this.prisma.menuItem.delete({ where: { id: itemId } });
+  }
+
+  async reorderItems(menuId: string, dto: ReorderItemsDto, companyId: string): Promise<MenuDetailRow> {
+    const menu = await this.prisma.menu.findFirst({ where: { id: menuId, companyId } });
+    if (!menu) throw new NotFoundException(`Menu not found: ${menuId}`);
+
+    await this.prisma.$transaction(
+      dto.items.map(({ id, order }) =>
+        this.prisma.menuItem.update({ where: { id }, data: { order } }),
+      ),
+    );
+
+    return this.findOne(menuId, companyId);
   }
 
   private async assertSlugAvailable(
