@@ -4,6 +4,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
 import { CostCalculatorModule } from "./cost-calculator/cost-calculator.module";
+import { ExpensesModule } from "./expenses/expenses.module";
 import { IngredientsModule } from "./ingredients/ingredients.module";
 import { MenusModule } from "./menus/menus.module";
 import { ProductsModule } from "./products/products.module";
@@ -16,6 +17,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     PrismaModule,
     AuthModule,
     CostCalculatorModule,
+    ExpensesModule,
     IngredientsModule,
     MenusModule,
     ProductsModule,
