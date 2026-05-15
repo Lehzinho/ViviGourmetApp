@@ -3,9 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { IngredientType } from "@prisma/client";
+import { IngredientType, RecipeType } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
-import type { CostBreakdownItem, CostResult, ProductCostResult } from "./cost-calculator.types";
+import type { CostBreakdownItem, CostResult, ProductCostResult, RecipeCostResult } from "./cost-calculator.types";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -83,6 +83,52 @@ export class CostCalculatorService {
       totalCostPerUnit: ingredientCostPerUnit + extraCostPerUnit,
       breakdown,
       extraCosts: extraCostItems,
+    };
+  }
+
+  async calculateRecipeCost(recipeId: string, companyId: string): Promise<RecipeCostResult> {
+    const recipe = await this.prisma.recipe.findFirst({
+      where: { id: recipeId, companyId, type: RecipeType.PRODUCT, deletedAt: null },
+      include: {
+        items: {
+          include: {
+            ingredient: { select: { id: true, name: true, unit: true, type: true } },
+          },
+        },
+      },
+    });
+
+    if (!recipe) throw new NotFoundException(`Recipe not found: ${recipeId}`);
+
+    const yieldAmount = this.toNumber(recipe.yield);
+    if (yieldAmount <= 0) {
+      throw new BadRequestException("Recipe yield must be greater than zero");
+    }
+
+    let totalCost = 0;
+    const breakdown: CostBreakdownItem[] = [];
+
+    for (const item of recipe.items) {
+      const qty = this.toNumber(item.quantity);
+      const subResult = await this.computeIngredientInternal(item.ingredientId, companyId, new Set());
+      const lineCost = qty * subResult.costPerUnit;
+      totalCost += lineCost;
+      breakdown.push({
+        name: item.ingredient.name,
+        type: item.ingredient.type === IngredientType.RAW ? "raw" : "semi_finished",
+        quantity: qty,
+        unit: item.ingredient.unit,
+        unitCost: subResult.costPerUnit,
+        totalCost: lineCost,
+      });
+    }
+
+    return {
+      totalCost,
+      costPerUnit: totalCost / yieldAmount,
+      yield: yieldAmount,
+      yieldUnit: recipe.yieldUnit,
+      breakdown,
     };
   }
 
