@@ -6,6 +6,7 @@ import { AuthModule } from "./auth/auth.module";
 import { CostCalculatorModule } from "./cost-calculator/cost-calculator.module";
 import { IngredientsModule } from "./ingredients/ingredients.module";
 import { ProductsModule } from "./products/products.module";
+import { RecipesModule } from "./recipes/recipes.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
 @Module({
@@ -16,6 +17,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     CostCalculatorModule,
     IngredientsModule,
     ProductsModule,
+    RecipesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
