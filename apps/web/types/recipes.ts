@@ -16,6 +16,8 @@ export interface RecipeRow {
   name: string;
   yield: number;
   yieldUnit: IngredientUnit;
+  totalCost: number | null;
+  costPerUnit: number | null;
   createdAt: string;
   deletedAt: string | null;
 }

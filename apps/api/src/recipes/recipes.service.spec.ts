@@ -2,6 +2,7 @@ import { BadRequestException, HttpException, NotFoundException } from "@nestjs/c
 import { Test } from "@nestjs/testing";
 import { Decimal } from "@prisma/client/runtime/library";
 import { PrismaService } from "../prisma/prisma.service";
+import { CostCalculatorService } from "../cost-calculator/cost-calculator.service";
 import { RecipesService } from "./recipes.service";
 
 const mockPrisma = () => ({
@@ -24,16 +25,23 @@ const mockPrisma = () => ({
   $transaction: jest.fn(),
 });
 
+const mockCostCalculator = () => ({
+  calculateRecipeCost: jest.fn().mockRejectedValue(new Error("no prices")),
+});
+
 describe("RecipesService", () => {
   let service: RecipesService;
   let prisma: ReturnType<typeof mockPrisma>;
+  let costCalc: ReturnType<typeof mockCostCalculator>;
 
   beforeEach(async () => {
     prisma = mockPrisma();
+    costCalc = mockCostCalculator();
     const module = await Test.createTestingModule({
       providers: [
         RecipesService,
         { provide: PrismaService, useValue: prisma },
+        { provide: CostCalculatorService, useValue: costCalc },
       ],
     }).compile();
     service = module.get(RecipesService);

@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { IngredientUnit, RecipeType, Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { CostCalculatorService } from "../cost-calculator/cost-calculator.service";
 import type { CreateRecipeDto } from "./dto/create-recipe.dto";
 import type { UpdateRecipeDto } from "./dto/update-recipe.dto";
 
@@ -16,6 +17,8 @@ export type RecipeRow = {
   name: string;
   yield: number;
   yieldUnit: IngredientUnit;
+  totalCost: number | null;
+  costPerUnit: number | null;
   createdAt: Date;
   deletedAt: Date | null;
 };
@@ -34,7 +37,10 @@ export type RecipeDetailRow = RecipeRow & {
 
 @Injectable()
 export class RecipesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly costCalculator: CostCalculatorService,
+  ) {}
 
   async create(companyId: string, dto: CreateRecipeDto): Promise<RecipeDetailRow> {
     const ingredientIds = dto.items.map((i) => i.ingredientId);
@@ -77,7 +83,21 @@ export class RecipesService {
       where: { companyId, type: RecipeType.PRODUCT, deletedAt: null },
       orderBy: { name: "asc" },
     });
-    return rows.map((r) => this.toRow(r));
+    const mapped = rows.map((r) => this.toRow(r));
+    const costResults = await Promise.allSettled(
+      mapped.map((r) => this.costCalculator.calculateRecipeCost(r.id, companyId)),
+    );
+    return mapped.map((row, i) => ({
+      ...row,
+      totalCost:
+        costResults[i].status === "fulfilled"
+          ? (costResults[i] as PromiseFulfilledResult<{ totalCost: number }>).value.totalCost
+          : null,
+      costPerUnit:
+        costResults[i].status === "fulfilled"
+          ? (costResults[i] as PromiseFulfilledResult<{ costPerUnit: number }>).value.costPerUnit
+          : null,
+    }));
   }
 
   async findOne(companyId: string, id: string): Promise<RecipeDetailRow> {
@@ -91,8 +111,21 @@ export class RecipesService {
       },
     });
     if (!r) throw new NotFoundException(`Recipe not found: ${id}`);
+
+    let totalCost: number | null = null;
+    let costPerUnit: number | null = null;
+    try {
+      const cost = await this.costCalculator.calculateRecipeCost(id, companyId);
+      totalCost = cost.totalCost;
+      costPerUnit = cost.costPerUnit;
+    } catch {
+      // cost unavailable — no prices yet
+    }
+
     return {
       ...this.toRow(r),
+      totalCost,
+      costPerUnit,
       items: r.items.map((item) => ({
         id: item.id,
         ingredientId: item.ingredientId,
@@ -187,6 +220,8 @@ export class RecipesService {
       name: r.name,
       yield: Number(r.yield),
       yieldUnit: r.yieldUnit,
+      totalCost: null,
+      costPerUnit: null,
       createdAt: r.createdAt,
       deletedAt: r.deletedAt,
     };
