@@ -10,6 +10,7 @@ import { MenusModule } from "./menus/menus.module";
 import { ProductsModule } from "./products/products.module";
 import { RecipesModule } from "./recipes/recipes.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { DashboardModule } from "./dashboard/dashboard.module";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     PrismaModule,
     AuthModule,
     CostCalculatorModule,
+    DashboardModule,
     ExpensesModule,
     IngredientsModule,
     MenusModule,

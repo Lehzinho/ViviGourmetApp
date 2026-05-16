@@ -139,12 +139,13 @@
 ## 🟢 PRIORIDADE 4 — Dashboard e Auth
 
 ### Web — Dashboard com dados reais `feature/web-dashboard`
-- [ ] Definir quais KPIs mostrar (ex: receitas cadastradas, custo médio, produtos, despesas do mês)
-- [ ] Criar componentes em `apps/web/components/dashboard/`
-    - [ ] `KpiCard.tsx` — card genérico de métrica
-    - [ ] `RecentRecipes.tsx`
-    - [ ] `CostOverviewChart.tsx` (opcional)
-- [ ] Implementar `apps/web/app/(dashboard)/dashboard/page.tsx` com dados reais via hooks
+- [x] Definir quais KPIs mostrar (ex: receitas cadastradas, custo médio, produtos, despesas do mês)
+- [x] Criar componentes em `apps/web/components/dashboard/`
+    - [x] `KpiCard.tsx` — card genérico de métrica
+    - [x] `RecentRecipesList.tsx`
+    - [x] `TopProductsList.tsx`
+    - [x] `ExpensesSummaryWidget.tsx`
+- [x] Implementar `apps/web/app/(dashboard)/dashboard/page.tsx` com dados reais via hooks
 
 ### Web — Proteção de rotas `feature/web-auth-middleware`
 - [ ] Criar `apps/web/middleware.ts` na raiz do app
