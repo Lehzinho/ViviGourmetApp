@@ -251,6 +251,20 @@ export class AuthService {
     return { companyId: match.companyId, role: match.role };
   }
 
+  async getMe(userId: string, companyId: string) {
+    const [user, company] = await Promise.all([
+      this.prisma.user.findFirst({
+        where: { id: userId, deletedAt: null },
+        select: { id: true, name: true, email: true },
+      }),
+      this.prisma.company.findFirst({
+        where: { id: companyId, deletedAt: null },
+        select: { id: true, name: true },
+      }),
+    ]);
+    return { user, company };
+  }
+
   private async uniqueCompanySlug(base: string): Promise<string> {
     let candidate = base;
     for (let i = 0; i < 50; i++) {

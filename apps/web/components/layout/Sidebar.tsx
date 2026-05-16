@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styled from "styled-components";
 import { NavIcon } from "@/components/layout/nav-icons";
 import { APP_NAME } from "@/lib/constants";
+import { clearStoredTokens } from "@/lib/apiClient";
+import { useMe } from "@/hooks/useMe";
 import type { NavItem } from "@/lib/navigation";
 
 const Aside = styled.aside<{ $open: boolean }>`
@@ -90,7 +92,12 @@ const UserCard = styled.div`
   border-radius: ${({ theme }) => theme.radius.md};
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
+
+const UserInfo = styled.div``;
 
 const UserName = styled.div`
   font-size: 0.875rem;
@@ -104,22 +111,44 @@ const UserHint = styled.div`
   margin-top: 0.15rem;
 `;
 
+const LogoutBtn = styled.button`
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border-radius: ${({ theme }) => theme.radius.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text.muted};
+  cursor: pointer;
+  text-align: left;
+  transition: background ${({ theme }) => theme.transition};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.neutral[100]};
+    color: ${({ theme }) => theme.colors.text.secondary};
+  }
+`;
+
 type SidebarProps = {
   navItems: NavItem[];
   mobileOpen: boolean;
   onNavigate?: () => void;
-  userName?: string;
-  userHint?: string;
 };
 
-export function Sidebar({
-  navItems,
-  mobileOpen,
-  onNavigate,
-  userName = "Usuário",
-  userHint = "Conectado",
-}: SidebarProps) {
+export function Sidebar({ navItems, mobileOpen, onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: me } = useMe();
+
+  const userName = me?.user?.name ?? "Usuário";
+  const companyName = me?.company?.name ?? "Conectado";
+
+  function handleLogout() {
+    clearStoredTokens();
+    document.cookie = "vivi_logged_in=; path=/; max-age=0; SameSite=Lax";
+    router.push("/login");
+  }
 
   return (
     <Aside $open={mobileOpen} aria-label="Menu principal">
@@ -145,8 +174,13 @@ export function Sidebar({
         })}
       </Nav>
       <UserCard>
-        <UserName>{userName}</UserName>
-        <UserHint>{userHint}</UserHint>
+        <UserInfo>
+          <UserName>{userName}</UserName>
+          <UserHint>{companyName}</UserHint>
+        </UserInfo>
+        <LogoutBtn type="button" onClick={handleLogout}>
+          Sair da conta
+        </LogoutBtn>
       </UserCard>
     </Aside>
   );

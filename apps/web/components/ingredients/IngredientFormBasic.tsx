@@ -1,7 +1,7 @@
 "use client";
 
 import type { BasicIngredientFormValues, IngredientUnit } from "@/types/ingredients";
-import { MOCK_CATEGORIES } from "@/data/mocks/ingredients.mock";
+import { INGREDIENT_CATEGORIES } from "@/lib/ingredient-categories";
 import {
   formatUnitCostExample,
   parseDecimalInput,
@@ -58,7 +58,7 @@ export function IngredientFormBasic({ value, onChange }: IngredientFormBasicProp
             onChange={(e) => patch({ category: e.target.value })}
           >
             <option value="">Selecione…</option>
-            {MOCK_CATEGORIES.map((c) => (
+            {INGREDIENT_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

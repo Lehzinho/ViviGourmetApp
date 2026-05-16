@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import styled from "styled-components";
 import { dashboardNav } from "@/lib/navigation";
+import { useMe } from "@/hooks/useMe";
 import { Header } from "./Header";
 import { Sidebar, SidebarBackdrop } from "./Sidebar";
 
@@ -26,8 +27,21 @@ type AppShellProps = {
   children: ReactNode;
 };
 
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export function AppShell({ children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: me } = useMe();
+
+  const initials = me?.user?.name ? getInitials(me.user.name) : "VG";
 
   return (
     <Shell>
@@ -38,7 +52,7 @@ export function AppShell({ children }: AppShellProps) {
       />
       <SidebarBackdrop visible={mobileOpen} onClose={() => setMobileOpen(false)} />
       <Body>
-        <Header onOpenSidebar={() => setMobileOpen(true)} userInitials="VG" />
+        <Header onOpenSidebar={() => setMobileOpen(true)} userInitials={initials} />
         <Main>{children}</Main>
       </Body>
     </Shell>
