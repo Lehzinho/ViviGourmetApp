@@ -148,11 +148,14 @@
 - [x] Implementar `apps/web/app/(dashboard)/dashboard/page.tsx` com dados reais via hooks
 
 ### Web — Proteção de rotas `feature/web-auth-middleware`
-- [ ] Criar `apps/web/middleware.ts` na raiz do app
-    - [ ] Redirecionar para `/login` se não houver token válido
-    - [ ] Redirecionar para `/dashboard` se já autenticado e acessar `/login`
-- [ ] Verificar se `app/(dashboard)/layout.tsx` já valida autenticação no client
-- [ ] Remover uso de mock data (`data/mocks/ingredients.mock.ts`) substituindo por dados reais da API
+- [x] Criar `apps/web/middleware.ts` na raiz do app
+    - [x] Redirecionar para `/login` se não houver token válido
+    - [x] Redirecionar para `/dashboard` se já autenticado e acessar `/login`
+- [x] Verificar se `app/(dashboard)/layout.tsx` já valida autenticação no client
+- [x] Remover uso de mock data (`data/mocks/ingredients.mock.ts`) substituindo por dados reais da API
+- [x] Exibir nome real do usuário e empresa no Sidebar via `GET /auth/me`
+- [x] Botão de logout no Sidebar (limpa cookie + localStorage + redireciona)
+- [x] Página raiz `/` redireciona para `/dashboard` (middleware + page.tsx)
 
 ---
 

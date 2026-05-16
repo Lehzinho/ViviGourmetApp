@@ -62,9 +62,38 @@ const Input = styled.input`
   background: ${({ theme }) => theme.colors.background};
   transition: border-color ${({ theme }) => theme.transition};
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
 
   &:focus {
     border-color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+const PasswordWrap = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+const PasswordInput = styled(Input)`
+  padding-right: 2.75rem;
+`;
+
+const ToggleBtn = styled.button`
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.text.muted};
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.text.secondary};
   }
 `;
 
@@ -106,10 +135,34 @@ type LoginResponse = {
   refreshToken: string;
 };
 
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -123,7 +176,10 @@ export default function LoginPage() {
         password,
       });
       setStoredTokens(data.accessToken, data.refreshToken);
-      router.push("/dashboard");
+      document.cookie = "vivi_logged_in=true; path=/; max-age=604800; SameSite=Lax";
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect") || "/dashboard";
+      router.push(redirect);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         setError("E-mail ou senha incorretos.");
@@ -142,7 +198,7 @@ export default function LoginPage() {
         <Heading>Entrar na sua conta</Heading>
 
         <form onSubmit={handleSubmit} noValidate>
-          {error && <ErrorMsg>{error}</ErrorMsg>}
+          {error && <ErrorMsg role="alert">{error}</ErrorMsg>}
 
           <Field>
             <Label htmlFor="email">E-mail</Label>
@@ -150,6 +206,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               autoComplete="email"
+              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vivi@vivi.com"
@@ -159,15 +216,26 @@ export default function LoginPage() {
 
           <Field>
             <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••"
-              required
-            />
+            <PasswordWrap>
+              <PasswordInput
+                as="input"
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                placeholder="••••••"
+                required
+              />
+              <ToggleBtn
+                type="button"
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                onClick={() => setShowPassword((v) => !v)}
+                tabIndex={-1}
+              >
+                <EyeIcon open={showPassword} />
+              </ToggleBtn>
+            </PasswordWrap>
           </Field>
 
           <SubmitBtn type="submit" disabled={loading}>

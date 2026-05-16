@@ -6,7 +6,7 @@ import type {
   IngredientListItem,
   IngredientUnit,
 } from "@/types/ingredients";
-import { MOCK_CATEGORIES } from "@/data/mocks/ingredients.mock";
+import { INGREDIENT_CATEGORIES } from "@/lib/ingredient-categories";
 import { formatBRL, newDraftId } from "@/lib/ingredient-math";
 import { Field, FormGrid, HelperText, Input, Label, Select, SectionTitle } from "./form-primitives";
 import { IngredientSelector } from "./IngredientSelector";
@@ -157,7 +157,7 @@ export function IngredientFormCompound({
             onChange={(e) => onMetaChange({ ...meta, category: e.target.value })}
           >
             <option value="">Selecione…</option>
-            {MOCK_CATEGORIES.map((c) => (
+            {INGREDIENT_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
