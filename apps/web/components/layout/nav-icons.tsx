@@ -64,6 +64,14 @@ export function NavIcon({ name, size = 20, className }: IconProps & { name: NavI
           <path d="M4 7h16M4 12h16M4 17h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
       );
+    case "users":
+      return (
+        <svg className={className} width={s} height={s} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="9" cy="7" r="3" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M3 19c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M16 3.5a3 3 0 010 5M21 19c0-2.761-2.015-5-4.5-5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      );
     default:
       return null;
   }

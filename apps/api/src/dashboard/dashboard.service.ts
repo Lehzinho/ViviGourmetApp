@@ -19,6 +19,7 @@ export class DashboardService {
       recipesCount,
       productsCount,
       menusCount,
+      customersCount,
       expensesThisMonth,
       recentRecipes,
       products,
@@ -27,6 +28,7 @@ export class DashboardService {
       this.prisma.recipe.count({ where: { companyId, deletedAt: null } }),
       this.prisma.product.count({ where: { companyId, deletedAt: null } }),
       this.prisma.menu.count({ where: { companyId } }),
+      this.prisma.customer.count({ where: { companyId, deletedAt: null } }),
       this.prisma.expense.aggregate({
         where: { companyId, deletedAt: null, date: { gte: startOfMonth, lte: endOfMonth } },
         _sum: { amount: true },
@@ -65,6 +67,7 @@ export class DashboardService {
         recipes: recipesCount,
         products: productsCount,
         menus: menusCount,
+        customers: customersCount,
       },
       expenses: {
         thisMonth: Number(expensesThisMonth._sum.amount ?? 0),

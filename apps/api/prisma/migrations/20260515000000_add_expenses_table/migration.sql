@@ -1,9 +1,9 @@
+-- Recreate expenses table with new schema
+DROP TABLE IF EXISTS "Expense";
+
 -- Remove old expense enums (unused)
 DROP TYPE IF EXISTS "ExpenseType";
 DROP TYPE IF EXISTS "ExpensePeriod";
-
--- Recreate expenses table with new schema
-DROP TABLE IF EXISTS "Expense";
 
 CREATE TABLE "expenses" (
     "id" TEXT NOT NULL,

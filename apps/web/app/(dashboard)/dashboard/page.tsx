@@ -13,7 +13,11 @@ import { useDashboard } from "@/hooks/useDashboard";
 const KpiGrid = styled.div`
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 
   @media (max-width: 900px) {
     grid-template-columns: repeat(2, 1fr);
@@ -130,6 +134,7 @@ export default function DashboardPage() {
                 <Skeleton />
                 <Skeleton />
                 <Skeleton />
+                <Skeleton />
               </>
             ) : (
               <>
@@ -150,6 +155,12 @@ export default function DashboardPage() {
                   value={data!.counts.products}
                   icon="🛍️"
                   linkTo="/produtos"
+                />
+                <KpiCard
+                  label="Clientes"
+                  value={data!.counts.customers}
+                  icon="👥"
+                  linkTo="/clientes"
                 />
                 <KpiCard
                   label="Cardápios"

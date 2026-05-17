@@ -33,6 +33,12 @@ enum RecipeType {
   PRODUCT
 }
 
+enum OrderStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
 // --- Core auth & tenant ---
 
 /// Usuário global (pode pertencer a várias empresas via CompanyUser).
@@ -72,6 +78,8 @@ model Company {
   menus          Menu[]
   menuItems      MenuItem[]
   refreshTokens  RefreshToken[]
+  customers      Customer[]
+  orders         Order[]
 
   @@index([deletedAt])
   @@index([createdAt])
@@ -225,6 +233,7 @@ model Product {
   category   Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   extraCosts ProductExtraCost[]
   menuItems  MenuItem[]
+  orderItems OrderItem[]
 
   @@index([companyId])
   @@index([companyId, deletedAt])
@@ -308,4 +317,76 @@ model MenuItem {
   @@index([companyId, menuId])
   @@index([menuId, order])
   @@index([productId])
+}
+
+// --- CRM ---
+
+model Customer {
+  id          String    @id @default(uuid())
+  companyId   String
+  name        String
+  phone       String
+  email       String?
+  notes       String?
+  avatarUrl   String?
+  lastVisitAt DateTime?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  orders  Order[]
+
+  @@index([companyId])
+  @@index([companyId, deletedAt])
+  @@index([companyId, name])
+  @@map("customers")
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  companyId     String
+  customerId    String?
+  orderNumber   Int
+  status        OrderStatus @default(OPEN)
+  paymentMethod String?
+  discount      Decimal?    @db.Decimal(10, 2)
+  notes         String?
+  tableNumber   String?
+  waiterId      String?
+  openedAt      DateTime    @default(now())
+  closedAt      DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  company  Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer Customer?  @relation(fields: [customerId], references: [id])
+  items    OrderItem[]
+
+  @@index([companyId])
+  @@index([companyId, deletedAt])
+  @@index([companyId, customerId])
+  @@index([companyId, status])
+  @@index([companyId, orderNumber])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  productId  String
+  quantity   Decimal  @db.Decimal(10, 3)
+  unitPrice  Decimal  @db.Decimal(10, 2)
+  totalPrice Decimal  @db.Decimal(10, 2)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
 }

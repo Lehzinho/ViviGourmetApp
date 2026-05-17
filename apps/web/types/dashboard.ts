@@ -4,6 +4,7 @@ export type DashboardSummary = {
     recipes: number;
     products: number;
     menus: number;
+    customers: number;
   };
   expenses: {
     thisMonth: number;
