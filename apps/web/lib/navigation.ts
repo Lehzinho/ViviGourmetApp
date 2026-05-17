@@ -1,4 +1,4 @@
-export type NavIconKey = "home" | "leaf" | "book" | "package" | "wallet" | "menu";
+export type NavIconKey = "home" | "leaf" | "book" | "package" | "wallet" | "menu" | "users";
 
 export type NavItem = {
   href: string;
@@ -11,6 +11,7 @@ export const dashboardNav: NavItem[] = [
   { href: "/ingredientes", label: "Ingredientes", icon: "leaf" },
   { href: "/receitas", label: "Receitas", icon: "book" },
   { href: "/produtos", label: "Produtos", icon: "package" },
+  { href: "/clientes", label: "Clientes", icon: "users" },
   { href: "/despesas", label: "Despesas", icon: "wallet" },
   { href: "/cardapio", label: "Cardápio", icon: "menu" },
 ];
@@ -20,6 +21,7 @@ export const pathTitleMap: Record<string, string> = {
   ingredientes: "Ingredientes",
   receitas: "Receitas",
   produtos: "Produtos",
+  clientes: "Clientes",
   despesas: "Despesas",
   cardapio: "Cardápio",
 };
