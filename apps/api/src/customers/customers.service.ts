@@ -131,12 +131,13 @@ export class CustomersService {
         this.prisma.order.aggregate({
           where: { companyId, customerId: c.id, status: "CLOSED", deletedAt: null },
           _sum: { discount: true },
-        }).then(async () => {
+        }).then(async (agg) => {
+          const totalDiscount = Number(agg._sum.discount ?? 0);
           const items = await this.prisma.orderItem.findMany({
             where: { order: { companyId, customerId: c.id, status: "CLOSED", deletedAt: null } },
             select: { totalPrice: true },
           });
-          return items.reduce((s, i) => s + Number(i.totalPrice), 0);
+          return items.reduce((s, i) => s + Number(i.totalPrice), 0) - totalDiscount;
         }),
       ),
     );
@@ -181,7 +182,6 @@ export class CustomersService {
     const recentOrders = await this.prisma.order.findMany({
       where: { companyId, customerId: id, deletedAt: null },
       orderBy: { openedAt: "desc" },
-      take: 10,
       include: {
         customer: { select: { id: true, name: true, phone: true } },
         items: { include: { product: { select: { id: true, name: true } } } },
@@ -391,7 +391,7 @@ export class CustomersService {
     });
 
     const updated = await this.prisma.order.findFirst({
-      where: { id },
+      where: { id, companyId },
       include: {
         customer: { select: { id: true, name: true, phone: true } },
         items: { include: { product: { select: { id: true, name: true } } } },
@@ -412,7 +412,7 @@ export class CustomersService {
     });
 
     const updated = await this.prisma.order.findFirst({
-      where: { id },
+      where: { id, companyId },
       include: {
         customer: { select: { id: true, name: true, phone: true } },
         items: { include: { product: { select: { id: true, name: true } } } },

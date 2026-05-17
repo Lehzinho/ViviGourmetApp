@@ -139,6 +139,17 @@ const DangerBtn = styled(ActionBtn)`
   }
 `;
 
+const PrimaryBtn = styled(ActionBtn)`
+  margin-left: 0.4rem;
+  border-color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.primary};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary};
+    color: #fff;
+  }
+`;
+
 const ActionsCell = styled.div`
   display: flex;
   align-items: center;
@@ -189,6 +200,7 @@ export function CustomerTable({
   onView,
   onEdit,
   onDelete,
+  onNewOrder,
   search,
   onSearchChange,
 }: CustomerTableProps) {
@@ -250,6 +262,9 @@ export function CustomerTable({
                     <ActionBtn type="button" style={{ marginLeft: "0.4rem" }} onClick={() => onEdit(row)}>
                       Editar
                     </ActionBtn>
+                    <PrimaryBtn type="button" onClick={() => onNewOrder(row)}>
+                      Nova venda
+                    </PrimaryBtn>
                     <DangerBtn type="button" onClick={() => onDelete(row)}>
                       Excluir
                     </DangerBtn>
