@@ -9,7 +9,6 @@ const mockPrisma = () => ({
     findFirst: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
-    delete: jest.fn(),
   },
   menuItem: {
     findFirst: jest.fn(),
@@ -36,6 +35,7 @@ const baseMenu = {
   name: "Cardápio de Verão",
   slug: "cardapio-de-verao",
   isPublic: false,
+  deletedAt: null,
   createdAt: new Date("2024-01-01"),
   _count: { items: 0 },
 };
@@ -75,7 +75,7 @@ describe("MenusService", () => {
       expect(result).toHaveLength(1);
       expect(result[0].itemCount).toBe(0);
       expect(prisma.menu.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { companyId: COMPANY } }),
+        expect.objectContaining({ where: { companyId: COMPANY, deletedAt: null } }),
       );
     });
 
@@ -162,11 +162,24 @@ describe("MenusService", () => {
   });
 
   describe("remove", () => {
-    it("should hard-delete the menu", async () => {
+    it("should soft-delete the menu by setting deletedAt", async () => {
       prisma.menu.findFirst.mockResolvedValue(baseMenu);
-      prisma.menu.delete.mockResolvedValue(baseMenu);
+      prisma.menu.update.mockResolvedValue({ ...baseMenu, deletedAt: new Date() });
       await service.remove(MENU_ID, COMPANY);
-      expect(prisma.menu.delete).toHaveBeenCalledWith({ where: { id: MENU_ID } });
+      expect(prisma.menu.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: MENU_ID },
+          data: expect.objectContaining({ deletedAt: expect.any(Date) }),
+        }),
+      );
+    });
+
+    it("should rename slug on soft-delete to free it for reuse", async () => {
+      prisma.menu.findFirst.mockResolvedValue(baseMenu);
+      prisma.menu.update.mockResolvedValue({ ...baseMenu, deletedAt: new Date() });
+      await service.remove(MENU_ID, COMPANY);
+      const updateCall = prisma.menu.update.mock.calls[0][0];
+      expect(updateCall.data.slug).toMatch(/^cardapio-de-verao__deleted__\d+$/);
     });
 
     it("should throw NotFoundException when menu not found", async () => {
