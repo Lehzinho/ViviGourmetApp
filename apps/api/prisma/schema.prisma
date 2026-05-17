@@ -283,12 +283,13 @@ model Expense {
 // --- Cardápio público ---
 
 model Menu {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   companyId String
   name      String
   slug      String
-  isPublic  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  isPublic  Boolean   @default(false)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
 
   company Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   items   MenuItem[]

@@ -41,7 +41,7 @@ export class MenusService {
 
   async findAll(companyId: string): Promise<MenuRow[]> {
     const menus = await this.prisma.menu.findMany({
-      where: { companyId },
+      where: { companyId, deletedAt: null },
       include: { _count: { select: { items: true } } },
       orderBy: { createdAt: "desc" },
     });
@@ -58,7 +58,7 @@ export class MenusService {
 
   async findOne(id: string, companyId: string): Promise<MenuDetailRow> {
     const menu = await this.prisma.menu.findFirst({
-      where: { id, companyId },
+      where: { id, companyId, deletedAt: null },
       include: {
         items: {
           include: {
@@ -112,7 +112,7 @@ export class MenusService {
   }
 
   async update(id: string, dto: UpdateMenuDto, companyId: string): Promise<MenuRow> {
-    const existing = await this.prisma.menu.findFirst({ where: { id, companyId } });
+    const existing = await this.prisma.menu.findFirst({ where: { id, companyId, deletedAt: null } });
     if (!existing) throw new NotFoundException(`Menu not found: ${id}`);
 
     const slug =
@@ -147,13 +147,18 @@ export class MenusService {
   }
 
   async remove(id: string, companyId: string): Promise<void> {
-    const existing = await this.prisma.menu.findFirst({ where: { id, companyId } });
+    const existing = await this.prisma.menu.findFirst({ where: { id, companyId, deletedAt: null } });
     if (!existing) throw new NotFoundException(`Menu not found: ${id}`);
-    await this.prisma.menu.delete({ where: { id } });
+    // Rename slug to free it for reuse after soft-delete
+    const tombstoneSlug = `${existing.slug}__deleted__${Date.now()}`;
+    await this.prisma.menu.update({
+      where: { id },
+      data: { deletedAt: new Date(), slug: tombstoneSlug },
+    });
   }
 
   async addItem(menuId: string, dto: AddMenuItemDto, companyId: string): Promise<MenuItemRow> {
-    const menu = await this.prisma.menu.findFirst({ where: { id: menuId, companyId } });
+    const menu = await this.prisma.menu.findFirst({ where: { id: menuId, companyId, deletedAt: null } });
     if (!menu) throw new NotFoundException(`Menu not found: ${menuId}`);
 
     const product = await this.prisma.product.findFirst({
@@ -234,7 +239,7 @@ export class MenusService {
   }
 
   async reorderItems(menuId: string, dto: ReorderItemsDto, companyId: string): Promise<MenuDetailRow> {
-    const menu = await this.prisma.menu.findFirst({ where: { id: menuId, companyId } });
+    const menu = await this.prisma.menu.findFirst({ where: { id: menuId, companyId, deletedAt: null } });
     if (!menu) throw new NotFoundException(`Menu not found: ${menuId}`);
 
     await this.prisma.$transaction(
@@ -252,7 +257,7 @@ export class MenusService {
     excludeId?: string,
   ): Promise<void> {
     const conflict = await this.prisma.menu.findFirst({
-      where: { companyId, slug, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
+      where: { companyId, slug, deletedAt: null, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
     });
     if (conflict) {
       throw new ConflictException(`Slug "${slug}" is already in use`);

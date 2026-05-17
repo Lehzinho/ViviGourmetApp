@@ -27,7 +27,7 @@ export class DashboardService {
       this.prisma.ingredient.count({ where: { companyId, deletedAt: null } }),
       this.prisma.recipe.count({ where: { companyId, deletedAt: null } }),
       this.prisma.product.count({ where: { companyId, deletedAt: null } }),
-      this.prisma.menu.count({ where: { companyId } }),
+      this.prisma.menu.count({ where: { companyId, deletedAt: null } }),
       this.prisma.customer.count({ where: { companyId, deletedAt: null } }),
       this.prisma.expense.aggregate({
         where: { companyId, deletedAt: null, date: { gte: startOfMonth, lte: endOfMonth } },
